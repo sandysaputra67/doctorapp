@@ -21,16 +21,40 @@ use Prophecy\Exception\InvalidArgumentException;
  */
 class ClassNode
 {
+    /**
+     * @var string
+     */
     private $parentClass = 'stdClass';
+    /**
+     * @var list<string>
+     */
     private $interfaces  = array();
+
+    /**
+     * @var array<string, string>
+     *
+     * @phpstan-var array<string, 'public'|'private'|'protected'>
+     */
     private $properties  = array();
+
+    /**
+     * @var list<string>
+     */
     private $unextendableMethods = array();
 
     /**
-     * @var MethodNode[]
+     * @var bool
      */
-    private $methods     = array();
+    private $readOnly = false;
 
+    /**
+     * @var array<string, MethodNode>
+     */
+    private $methods = array();
+
+    /**
+     * @return string
+     */
     public function getParentClass()
     {
         return $this->parentClass;
@@ -38,6 +62,8 @@ class ClassNode
 
     /**
      * @param string $class
+     *
+     * @return void
      */
     public function setParentClass($class)
     {
@@ -45,7 +71,7 @@ class ClassNode
     }
 
     /**
-     * @return string[]
+     * @return list<string>
      */
     public function getInterfaces()
     {
@@ -54,6 +80,8 @@ class ClassNode
 
     /**
      * @param string $interface
+     *
+     * @return void
      */
     public function addInterface($interface)
     {
@@ -74,16 +102,29 @@ class ClassNode
         return in_array($interface, $this->interfaces);
     }
 
+    /**
+     * @return array<string, string>
+     *
+     * @phpstan-return array<string, 'public'|'private'|'protected'>
+     */
     public function getProperties()
     {
         return $this->properties;
     }
 
+    /**
+     * @param string $name
+     * @param string $visibility
+     *
+     * @return void
+     *
+     * @phpstan-param 'public'|'private'|'protected' $visibility
+     */
     public function addProperty($name, $visibility = 'public')
     {
         $visibility = strtolower($visibility);
 
-        if (!in_array($visibility, array('public', 'private', 'protected'))) {
+        if (!\in_array($visibility, array('public', 'private', 'protected'), true)) {
             throw new InvalidArgumentException(sprintf(
                 '`%s` property visibility is not supported.', $visibility
             ));
@@ -93,14 +134,20 @@ class ClassNode
     }
 
     /**
-     * @return MethodNode[]
+     * @return array<string, MethodNode>
      */
     public function getMethods()
     {
         return $this->methods;
     }
 
-    public function addMethod(MethodNode $method)
+    /**
+     * @param MethodNode $method
+     * @param bool       $force
+     *
+     * @return void
+     */
+    public function addMethod(MethodNode $method, $force = false)
     {
         if (!$this->isExtendable($method->getName())){
             $message = sprintf(
@@ -108,9 +155,17 @@ class ClassNode
             );
             throw new MethodNotExtendableException($message, $this->getParentClass(), $method->getName());
         }
-        $this->methods[$method->getName()] = $method;
+
+        if ($force || !isset($this->methods[$method->getName()])) {
+            $this->methods[$method->getName()] = $method;
+        }
     }
 
+    /**
+     * @param string $name
+     *
+     * @return void
+     */
     public function removeMethod($name)
     {
         unset($this->methods[$name]);
@@ -137,7 +192,7 @@ class ClassNode
     }
 
     /**
-     * @return string[]
+     * @return list<string>
      */
     public function getUnextendableMethods()
     {
@@ -146,6 +201,8 @@ class ClassNode
 
     /**
      * @param string $unextendableMethod
+     *
+     * @return void
      */
     public function addUnextendableMethod($unextendableMethod)
     {
@@ -157,10 +214,29 @@ class ClassNode
 
     /**
      * @param string $method
+     *
      * @return bool
      */
     public function isExtendable($method)
     {
         return !in_array($method, $this->unextendableMethods);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isReadOnly()
+    {
+        return $this->readOnly;
+    }
+
+    /**
+     * @param bool $readOnly
+     *
+     * @return void
+     */
+    public function setReadOnly($readOnly)
+    {
+        $this->readOnly = $readOnly;
     }
 }

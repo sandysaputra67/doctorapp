@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db\sqlite;
@@ -11,7 +11,7 @@ namespace yii\db\sqlite;
  * SqlTokenizer splits SQLite query into individual SQL tokens.
  * It's used to obtain a `CHECK` constraint information from a `CREATE TABLE` SQL code.
  *
- * @see http://www.sqlite.org/draft/tokenreq.html
+ * @see https://www.sqlite.org/draft/tokenreq.html
  * @see https://sqlite.org/lang.html
  * @author Sergey Makinen <sergey@makinen.ru>
  * @since 2.0.13
@@ -19,7 +19,7 @@ namespace yii\db\sqlite;
 class SqlTokenizer extends \yii\db\SqlTokenizer
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isWhitespace(&$length)
     {
@@ -36,7 +36,7 @@ class SqlTokenizer extends \yii\db\SqlTokenizer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isComment(&$length)
     {
@@ -60,7 +60,7 @@ class SqlTokenizer extends \yii\db\SqlTokenizer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isOperator(&$length, &$content)
     {
@@ -95,7 +95,7 @@ class SqlTokenizer extends \yii\db\SqlTokenizer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isIdentifier(&$length, &$content)
     {
@@ -127,7 +127,7 @@ class SqlTokenizer extends \yii\db\SqlTokenizer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isStringLiteral(&$length, &$content)
     {
@@ -148,7 +148,7 @@ class SqlTokenizer extends \yii\db\SqlTokenizer
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function isKeyword($string, &$content)
     {

@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\widgets;
@@ -58,6 +58,8 @@ class ContentDecorator extends Widget
      */
     public function init()
     {
+        parent::init();
+
         if ($this->viewFile === null) {
             throw new InvalidConfigException('ContentDecorator::viewFile must be set.');
         }

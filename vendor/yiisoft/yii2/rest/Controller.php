@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\rest;
@@ -37,13 +37,13 @@ class Controller extends \yii\web\Controller
      */
     public $serializer = 'yii\rest\Serializer';
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public $enableCsrfValidation = false;
 
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function behaviors()
     {
@@ -69,7 +69,7 @@ class Controller extends \yii\web\Controller
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function afterAction($action, $result)
     {

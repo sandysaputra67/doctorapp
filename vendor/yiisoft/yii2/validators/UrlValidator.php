@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\validators;
@@ -35,7 +35,7 @@ class UrlValidator extends Validator
      */
     public $validSchemes = ['http', 'https'];
     /**
-     * @var string the default URI scheme. If the input doesn't contain the scheme part, the default
+     * @var string|null the default URI scheme. If the input doesn't contain the scheme part, the default
      * scheme will be prepended to it (thus changing the input). Defaults to null, meaning a URL must
      * contain the scheme part.
      */
@@ -50,7 +50,7 @@ class UrlValidator extends Validator
 
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function init()
     {
@@ -64,7 +64,7 @@ class UrlValidator extends Validator
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function validateAttribute($model, $attribute)
     {
@@ -78,7 +78,7 @@ class UrlValidator extends Validator
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function validateValue($value)
     {
@@ -115,11 +115,11 @@ class UrlValidator extends Validator
             return idn_to_ascii($idn);
         }
 
-        return idn_to_ascii($idn, 0, INTL_IDNA_VARIANT_UTS46);
+        return idn_to_ascii($idn, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function clientValidateAttribute($model, $attribute, $view)
     {
@@ -133,7 +133,7 @@ class UrlValidator extends Validator
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getClientOptions($model, $attribute)
     {

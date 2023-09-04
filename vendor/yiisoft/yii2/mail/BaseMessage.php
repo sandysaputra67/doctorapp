@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\mail;
@@ -14,8 +14,8 @@ use yii\base\ErrorHandler;
 /**
  * BaseMessage serves as a base class that implements the [[send()]] method required by [[MessageInterface]].
  *
- * By default, [[send()]] will use the "mail" application component to send the current message.
- * The "mail" application component should be a mailer instance implementing [[MailerInterface]].
+ * By default, [[send()]] will use the "mailer" application component to send the current message.
+ * The "mailer" application component should be a mailer instance implementing [[MailerInterface]].
  *
  * @see BaseMailer
  *
@@ -25,7 +25,7 @@ use yii\base\ErrorHandler;
 abstract class BaseMessage extends BaseObject implements MessageInterface
 {
     /**
-     * @var MailerInterface the mailer instance that created this message.
+     * @var MailerInterface|null the mailer instance that created this message.
      * For independently created messages this is `null`.
      */
     public $mailer;
@@ -33,9 +33,9 @@ abstract class BaseMessage extends BaseObject implements MessageInterface
 
     /**
      * Sends this email message.
-     * @param MailerInterface $mailer the mailer that should be used to send this message.
+     * @param MailerInterface|null $mailer the mailer that should be used to send this message.
      * If no mailer is given it will first check if [[mailer]] is set and if not,
-     * the "mail" application component will be used instead.
+     * the "mailer" application component will be used instead.
      * @return bool whether this message is sent successfully.
      */
     public function send(MailerInterface $mailer = null)

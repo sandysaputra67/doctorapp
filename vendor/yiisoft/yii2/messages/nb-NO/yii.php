@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 /**
@@ -37,7 +37,7 @@ return [
     'No' => 'Nei',
     'No results found.' => 'Ingen resultater funnet.',
     'Only files with these MIME types are allowed: {mimeTypes}.' => 'Bare filer med disse MIME-typene er tillatt: {mimeTypes}.',
-    'Only files with these extensions are allowed: {extensions}.' => 'Bare filer med disse filendelsene er tillatt: {mimeTypes}.',
+    'Only files with these extensions are allowed: {extensions}.' => 'Bare filer med disse filendelsene er tillatt: {extensions}.',
     'Page not found.' => 'Siden finnes ikke.',
     'Please fix the following errors:' => 'Vennligs fiks følgende feil:',
     'Please upload a file.' => 'Vennligs last opp en fil.',
@@ -98,7 +98,7 @@ return [
     '{nFormatted} B' => '{nFormatted} B',
     '{nFormatted} GB' => '{nFormatted} GB',
     '{nFormatted} GiB' => '{nFormatted} GiB',
-    '{nFormatted} KB' => '{nFormatted} KB',
+    '{nFormatted} kB' => '{nFormatted} kB',
     '{nFormatted} KiB' => '{nFormatted} KiB',
     '{nFormatted} MB' => '{nFormatted} MB',
     '{nFormatted} MiB' => '{nFormatted} MiB',

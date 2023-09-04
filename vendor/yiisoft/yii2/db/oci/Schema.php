@@ -1,18 +1,20 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db\oci;
 
+use Yii;
 use yii\base\InvalidCallException;
 use yii\base\NotSupportedException;
 use yii\db\CheckConstraint;
 use yii\db\ColumnSchema;
 use yii\db\Connection;
 use yii\db\Constraint;
+use yii\db\ConstraintFinderInterface;
 use yii\db\ConstraintFinderTrait;
 use yii\db\Expression;
 use yii\db\ForeignKeyConstraint;
@@ -23,13 +25,13 @@ use yii\helpers\ArrayHelper;
 /**
  * Schema is the class for retrieving metadata from an Oracle database.
  *
- * @property string $lastInsertID The row ID of the last row inserted, or the last value retrieved from the
- * sequence object. This property is read-only.
+ * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
+ * the sequence object.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class Schema extends \yii\db\Schema
+class Schema extends \yii\db\Schema implements ConstraintFinderInterface
 {
     use ConstraintFinderTrait;
 
@@ -41,20 +43,29 @@ class Schema extends \yii\db\Schema
         'ORA-00001: unique constraint' => 'yii\db\IntegrityException',
     ];
 
+    /**
+     * {@inheritdoc}
+     */
+    protected $tableQuoteCharacter = '"';
+
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function init()
     {
         parent::init();
         if ($this->defaultSchema === null) {
-            $this->defaultSchema = strtoupper($this->db->username);
+            $username = $this->db->username;
+            if (empty($username)) {
+                $username = isset($this->db->masters[0]['username']) ? $this->db->masters[0]['username'] : '';
+            }
+            $this->defaultSchema = strtoupper($username);
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function resolveTableName($name)
     {
@@ -72,7 +83,7 @@ class Schema extends \yii\db\Schema
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      * @see https://docs.oracle.com/cd/B28359_01/server.111/b28337/tdpsg_user_accounts.htm
      */
     protected function findSchemaNames()
@@ -88,7 +99,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function findTableNames($schema = '')
     {
@@ -134,7 +145,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function loadTableSchema($name)
     {
@@ -149,7 +160,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function loadTablePrimaryKey($tableName)
     {
@@ -157,7 +168,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function loadTableForeignKeys($tableName)
     {
@@ -165,7 +176,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function loadTableIndexes($tableName)
     {
@@ -206,7 +217,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function loadTableUniques($tableName)
     {
@@ -214,7 +225,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function loadTableChecks($tableName)
     {
@@ -222,7 +233,7 @@ SQL;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      * @throws NotSupportedException if this method is called.
      */
     protected function loadTableDefaultValues($tableName)
@@ -231,7 +242,7 @@ SQL;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function releaseSavepoint($name)
     {
@@ -239,7 +250,7 @@ SQL;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function quoteSimpleTableName($name)
     {
@@ -247,19 +258,19 @@ SQL;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function createQueryBuilder()
     {
-        return new QueryBuilder($this->db);
+        return Yii::createObject(QueryBuilder::className(), [$this->db]);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function createColumnSchemaBuilder($type, $length = null)
     {
-        return new ColumnSchemaBuilder($type, $length, $this->db);
+        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length]);
     }
 
     /**
@@ -295,7 +306,11 @@ SELECT
     A.DATA_TYPE,
     A.DATA_PRECISION,
     A.DATA_SCALE,
-    A.DATA_LENGTH,
+    (
+      CASE A.CHAR_USED WHEN 'C' THEN A.CHAR_LENGTH
+        ELSE A.DATA_LENGTH
+      END
+    ) AS DATA_LENGTH,
     A.NULLABLE,
     A.DATA_DEFAULT,
     COM.COMMENTS AS COLUMN_COMMENT
@@ -358,7 +373,7 @@ SQL;
 
     /**
      * @Overrides method in class 'Schema'
-     * @see http://www.php.net/manual/en/function.PDO-lastInsertId.php -> Oracle does not support this
+     * @see https://www.php.net/manual/en/function.PDO-lastInsertId.php -> Oracle does not support this
      *
      * Returns the ID of the last inserted row or sequence value.
      * @param string $sequenceName name of the sequence object (required by some DBMS)
@@ -397,18 +412,20 @@ SQL;
         $c->phpType = $this->getColumnPhpType($c);
 
         if (!$c->isPrimaryKey) {
-            if (stripos($column['DATA_DEFAULT'], 'timestamp') !== false) {
+            if (stripos((string) $column['DATA_DEFAULT'], 'timestamp') !== false) {
                 $c->defaultValue = null;
             } else {
-                $defaultValue = $column['DATA_DEFAULT'];
+                $defaultValue = (string) $column['DATA_DEFAULT'];
                 if ($c->type === 'timestamp' && $defaultValue === 'CURRENT_TIMESTAMP') {
                     $c->defaultValue = new Expression('CURRENT_TIMESTAMP');
                 } else {
                     if ($defaultValue !== null) {
-                        if (($len = strlen($defaultValue)) > 2 && $defaultValue[0] === "'"
-                            && $defaultValue[$len - 1] === "'"
+                        if (
+                            strlen($defaultValue) > 2
+                            && strncmp($defaultValue, "'", 1) === 0
+                            && substr($defaultValue, -1) === "'"
                         ) {
-                            $defaultValue = substr($column['DATA_DEFAULT'], 1, -1);
+                            $defaultValue = substr($defaultValue, 1, -1);
                         } else {
                             $defaultValue = trim($defaultValue);
                         }
@@ -482,8 +499,7 @@ SQL;
         }
 
         foreach ($constraints as $constraint) {
-            $name = array_keys($constraint);
-            $name = current($name);
+            $name = current(array_keys($constraint));
 
             $table->foreignKeys[$name] = array_merge([$constraint['tableName']], $constraint['columns']);
         }
@@ -579,13 +595,13 @@ SQL;
      */
     protected function extractColumnSize($column, $dbType, $precision, $scale, $length)
     {
-        $column->size = trim($length) === '' ? null : (int) $length;
-        $column->precision = trim($precision) === '' ? null : (int) $precision;
-        $column->scale = trim($scale) === '' ? null : (int) $scale;
+        $column->size = trim((string) $length) === '' ? null : (int) $length;
+        $column->precision = trim((string) $precision) === '' ? null : (int) $precision;
+        $column->scale = trim((string) $scale) === '' ? null : (int) $scale;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function insert($table, $columns)
     {
@@ -601,14 +617,14 @@ SQL;
                 $phName = QueryBuilder::PARAM_PREFIX . (count($params) + count($returnParams));
                 $returnParams[$phName] = [
                     'column' => $name,
-                    'value' => null,
+                    'value' => '',
                 ];
                 if (!isset($columnSchemas[$name]) || $columnSchemas[$name]->phpType !== 'integer') {
                     $returnParams[$phName]['dataType'] = \PDO::PARAM_STR;
                 } else {
                     $returnParams[$phName]['dataType'] = \PDO::PARAM_INT;
                 }
-                $returnParams[$phName]['size'] = isset($columnSchemas[$name]) && isset($columnSchemas[$name]->size) ? $columnSchemas[$name]->size : -1;
+                $returnParams[$phName]['size'] = isset($columnSchemas[$name]->size) ? $columnSchemas[$name]->size : -1;
                 $returning[] = $this->quoteColumnName($name);
             }
             $sql .= ' RETURNING ' . implode(', ', $returning) . ' INTO ' . implode(', ', array_keys($returnParams));

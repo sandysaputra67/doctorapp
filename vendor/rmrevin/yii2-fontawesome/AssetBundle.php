@@ -17,26 +17,26 @@ class AssetBundle extends \yii\web\AssetBundle
     /**
      * @inherit
      */
-    public $sourcePath = '@vendor/fortawesome/font-awesome';
+    public $sourcePath = '@vendor/rmrevin/yii2-fontawesome/assets/web-fonts-with-css';
 
     /**
      * @inherit
      */
     public $css = [
-        'css/font-awesome.min.css',
+        'css/fontawesome-all.css',
     ];
 
     /**
-     * Initializes the bundle.
-     * Set publish options to copy only necessary files (in this case css and font folders)
-     * @codeCoverageIgnore
+     * @inherit
      */
-    public function init()
-    {
-        parent::init();
-
-        $this->publishOptions['beforeCopy'] = function ($from, $to) {
-            return preg_match('%(/|\\\\)(fonts|css)%', $from);
-        };
-    }
+    public $publishOptions = [
+        'only' => [
+            "css/*",
+            "webfonts/*",
+        ],
+        'except' => [
+            "less",
+            "scss",
+        ],
+    ];
 }

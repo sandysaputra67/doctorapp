@@ -1,13 +1,12 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\test;
 
-use Yii;
 use yii\base\BaseObject;
 use yii\db\Connection;
 use yii\di\Instance;
@@ -34,7 +33,7 @@ abstract class DbFixture extends Fixture
 
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function init()
     {

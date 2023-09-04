@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\caching;
@@ -24,11 +24,11 @@ namespace yii\caching;
  */
 class ArrayCache extends Cache
 {
-    private $_cache;
+    private $_cache = [];
 
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function exists($key)
     {
@@ -37,7 +37,7 @@ class ArrayCache extends Cache
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function getValue($key)
     {
@@ -49,7 +49,7 @@ class ArrayCache extends Cache
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function setValue($key, $value, $duration)
     {
@@ -58,7 +58,7 @@ class ArrayCache extends Cache
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function addValue($key, $value, $duration)
     {
@@ -70,7 +70,7 @@ class ArrayCache extends Cache
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function deleteValue($key)
     {
@@ -79,7 +79,7 @@ class ArrayCache extends Cache
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function flushValues()
     {

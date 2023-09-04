@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db;
@@ -21,18 +21,18 @@ use yii\caching\TagDependency;
  *
  * Schema represents the database schema information that is DBMS specific.
  *
- * @property string $lastInsertID The row ID of the last row inserted, or the last value retrieved from the
- * sequence object. This property is read-only.
- * @property QueryBuilder $queryBuilder The query builder for this connection. This property is read-only.
- * @property string[] $schemaNames All schema names in the database, except system schemas. This property is
- * read-only.
- * @property string[] $tableNames All table names in the database. This property is read-only.
- * @property TableSchema[] $tableSchemas The metadata for all tables in the database. Each array element is an
- * instance of [[TableSchema]] or its child class. This property is read-only.
- * @property string $transactionIsolationLevel The transaction isolation level to use for this transaction.
- * This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]],
+ * @property-read string $lastInsertID The row ID of the last row inserted, or the last value retrieved from
+ * the sequence object.
+ * @property-read QueryBuilder $queryBuilder The query builder for this connection.
+ * @property-read string[] $schemaNames All schema names in the database, except system schemas.
+ * @property-read string $serverVersion Server version as a string.
+ * @property-read string[] $tableNames All table names in the database.
+ * @property-read TableSchema[] $tableSchemas The metadata for all tables in the database. Each array element
+ * is an instance of [[TableSchema]] or its child class.
+ * @property-write string $transactionIsolationLevel The transaction isolation level to use for this
+ * transaction. This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]],
  * [[Transaction::REPEATABLE_READ]] and [[Transaction::SERIALIZABLE]] but also a string containing DBMS specific
- * syntax to be used after `SET TRANSACTION ISOLATION LEVEL`. This property is write-only.
+ * syntax to be used after `SET TRANSACTION ISOLATION LEVEL`.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @author Sergey Makinen <sergey@makinen.ru>
@@ -48,6 +48,7 @@ abstract class Schema extends BaseObject
     const TYPE_CHAR = 'char';
     const TYPE_STRING = 'string';
     const TYPE_TEXT = 'text';
+    const TYPE_TINYINT = 'tinyint';
     const TYPE_SMALLINT = 'smallint';
     const TYPE_INTEGER = 'integer';
     const TYPE_BIGINT = 'bigint';
@@ -61,6 +62,7 @@ abstract class Schema extends BaseObject
     const TYPE_BINARY = 'binary';
     const TYPE_BOOLEAN = 'boolean';
     const TYPE_MONEY = 'money';
+    const TYPE_JSON = 'json';
     /**
      * Schema cache version, to detect incompatibilities in cached values when the
      * data format of the cache changes.
@@ -83,10 +85,23 @@ abstract class Schema extends BaseObject
         'SQLSTATE[23' => 'yii\db\IntegrityException',
     ];
     /**
-     * @var string column schema class
+     * @var string|array column schema class or class config
      * @since 2.0.11
      */
     public $columnSchemaClass = 'yii\db\ColumnSchema';
+
+    /**
+     * @var string|string[] character used to quote schema, table, etc. names.
+     * An array of 2 characters can be used in case starting and ending characters are different.
+     * @since 2.0.14
+     */
+    protected $tableQuoteCharacter = "'";
+    /**
+     * @var string|string[] character used to quote column names.
+     * An array of 2 characters can be used in case starting and ending characters are different.
+     * @since 2.0.14
+     */
+    protected $columnQuoteCharacter = '"';
 
     /**
      * @var array list of ALL schema names in the database, except system schemas
@@ -104,6 +119,10 @@ abstract class Schema extends BaseObject
      * @var QueryBuilder the query builder for this database
      */
     private $_builder;
+    /**
+     * @var string server version as a string.
+     */
+    private $_serverVersion;
 
 
     /**
@@ -235,7 +254,7 @@ abstract class Schema extends BaseObject
      * Determines the PDO type for the given PHP data value.
      * @param mixed $data the data whose PDO type is to be determined
      * @return int the PDO type
-     * @see http://www.php.net/manual/en/pdo.constants.php
+     * @see https://www.php.net/manual/en/pdo.constants.php
      */
     public function getPdoType($data)
     {
@@ -294,7 +313,7 @@ abstract class Schema extends BaseObject
      */
     public function createQueryBuilder()
     {
-        return new QueryBuilder($this->db);
+        return Yii::createObject(QueryBuilder::className(), [$this->db]);
     }
 
     /**
@@ -303,13 +322,13 @@ abstract class Schema extends BaseObject
      * This method may be overridden by child classes to create a DBMS-specific column schema builder.
      *
      * @param string $type type of the column. See [[ColumnSchemaBuilder::$type]].
-     * @param int|string|array $length length or precision of the column. See [[ColumnSchemaBuilder::$length]].
+     * @param int|string|array|null $length length or precision of the column. See [[ColumnSchemaBuilder::$length]].
      * @return ColumnSchemaBuilder column schema builder instance
      * @since 2.0.6
      */
     public function createColumnSchemaBuilder($type, $length = null)
     {
-        return new ColumnSchemaBuilder($type, $length);
+        return Yii::createObject(ColumnSchemaBuilder::className(), [$type, $length]);
     }
 
     /**
@@ -340,7 +359,7 @@ abstract class Schema extends BaseObject
      * @param string $sequenceName name of the sequence object (required by some DBMS)
      * @return string the row ID of the last row inserted, or the last value retrieved from the sequence object
      * @throws InvalidCallException if the DB connection is not active
-     * @see http://www.php.net/manual/en/function.PDO-lastInsertId.php
+     * @see https://www.php.net/manual/en/function.PDO-lastInsertId.php
      */
     public function getLastInsertID($sequenceName = '')
     {
@@ -352,7 +371,7 @@ abstract class Schema extends BaseObject
     }
 
     /**
-     * @return bool whether this DBMS supports [savepoint](http://en.wikipedia.org/wiki/Savepoint).
+     * @return bool whether this DBMS supports [savepoint](https://en.wikipedia.org/wiki/Savepoint).
      */
     public function supportsSavepoint()
     {
@@ -392,7 +411,7 @@ abstract class Schema extends BaseObject
      * This can be one of [[Transaction::READ_UNCOMMITTED]], [[Transaction::READ_COMMITTED]], [[Transaction::REPEATABLE_READ]]
      * and [[Transaction::SERIALIZABLE]] but also a string containing DBMS specific syntax to be used
      * after `SET TRANSACTION ISOLATION LEVEL`.
-     * @see http://en.wikipedia.org/wiki/Isolation_%28database_systems%29#Isolation_levels
+     * @see https://en.wikipedia.org/wiki/Isolation_%28database_systems%29#Isolation_levels
      */
     public function setTransactionIsolationLevel($level)
     {
@@ -431,7 +450,7 @@ abstract class Schema extends BaseObject
      * Note that if the parameter is not a string, it will be returned without change.
      * @param string $str string to be quoted
      * @return string the properly quoted string
-     * @see http://www.php.net/manual/en/function.PDO-quote.php
+     * @see https://www.php.net/manual/en/function.PDO-quote.php
      */
     public function quoteValue($str)
     {
@@ -439,7 +458,7 @@ abstract class Schema extends BaseObject
             return $str;
         }
 
-        if (($value = $this->db->getSlavePdo()->quote($str)) !== false) {
+        if (mb_stripos((string)$this->db->dsn, 'odbc:') === false && ($value = $this->db->getSlavePdo(true)->quote($str)) !== false) {
             return $value;
         }
 
@@ -458,18 +477,32 @@ abstract class Schema extends BaseObject
      */
     public function quoteTableName($name)
     {
-        if (strpos($name, '(') !== false || strpos($name, '{{') !== false) {
+
+        if (strncmp($name, '(', 1) === 0 && strpos($name, ')') === strlen($name) - 1) {
+            return $name;
+        }
+        if (strpos($name, '{{') !== false) {
             return $name;
         }
         if (strpos($name, '.') === false) {
             return $this->quoteSimpleTableName($name);
         }
-        $parts = explode('.', $name);
+        $parts = $this->getTableNameParts($name);
         foreach ($parts as $i => $part) {
             $parts[$i] = $this->quoteSimpleTableName($part);
         }
-
         return implode('.', $parts);
+    }
+
+    /**
+     * Splits full table name into parts
+     * @param string $name
+     * @return array
+     * @since 2.0.22
+     */
+    protected function getTableNameParts($name)
+    {
+        return explode('.', $name);
     }
 
     /**
@@ -508,7 +541,12 @@ abstract class Schema extends BaseObject
      */
     public function quoteSimpleTableName($name)
     {
-        return strpos($name, "'") !== false ? $name : "'" . $name . "'";
+        if (is_string($this->tableQuoteCharacter)) {
+            $startingCharacter = $endingCharacter = $this->tableQuoteCharacter;
+        } else {
+            list($startingCharacter, $endingCharacter) = $this->tableQuoteCharacter;
+        }
+        return strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
     }
 
     /**
@@ -520,7 +558,48 @@ abstract class Schema extends BaseObject
      */
     public function quoteSimpleColumnName($name)
     {
-        return strpos($name, '"') !== false || $name === '*' ? $name : '"' . $name . '"';
+        if (is_string($this->columnQuoteCharacter)) {
+            $startingCharacter = $endingCharacter = $this->columnQuoteCharacter;
+        } else {
+            list($startingCharacter, $endingCharacter) = $this->columnQuoteCharacter;
+        }
+        return $name === '*' || strpos($name, $startingCharacter) !== false ? $name : $startingCharacter . $name . $endingCharacter;
+    }
+
+    /**
+     * Unquotes a simple table name.
+     * A simple table name should contain the table name only without any schema prefix.
+     * If the table name is not quoted, this method will do nothing.
+     * @param string $name table name.
+     * @return string unquoted table name.
+     * @since 2.0.14
+     */
+    public function unquoteSimpleTableName($name)
+    {
+        if (is_string($this->tableQuoteCharacter)) {
+            $startingCharacter = $this->tableQuoteCharacter;
+        } else {
+            $startingCharacter = $this->tableQuoteCharacter[0];
+        }
+        return strpos($name, $startingCharacter) === false ? $name : substr($name, 1, -1);
+    }
+
+    /**
+     * Unquotes a simple column name.
+     * A simple column name should contain the column name only without any prefix.
+     * If the column name is not quoted or is the asterisk character '*', this method will do nothing.
+     * @param string $name column name.
+     * @return string unquoted column name.
+     * @since 2.0.14
+     */
+    public function unquoteSimpleColumnName($name)
+    {
+        if (is_string($this->columnQuoteCharacter)) {
+            $startingCharacter = $this->columnQuoteCharacter;
+        } else {
+            $startingCharacter = $this->columnQuoteCharacter[0];
+        }
+        return strpos($name, $startingCharacter) === false ? $name : substr($name, 1, -1);
     }
 
     /**
@@ -550,13 +629,15 @@ abstract class Schema extends BaseObject
     {
         static $typeMap = [
             // abstract type => php type
-            'smallint' => 'integer',
-            'integer' => 'integer',
-            'bigint' => 'integer',
-            'boolean' => 'boolean',
-            'float' => 'double',
-            'double' => 'double',
-            'binary' => 'resource',
+            self::TYPE_TINYINT => 'integer',
+            self::TYPE_SMALLINT => 'integer',
+            self::TYPE_INTEGER => 'integer',
+            self::TYPE_BIGINT => 'integer',
+            self::TYPE_BOOLEAN => 'boolean',
+            self::TYPE_FLOAT => 'double',
+            self::TYPE_DOUBLE => 'double',
+            self::TYPE_BINARY => 'resource',
+            self::TYPE_JSON => 'array',
         ];
         if (isset($typeMap[$column->type])) {
             if ($column->type === 'bigint') {
@@ -592,7 +673,7 @@ abstract class Schema extends BaseObject
         }
         $message = $e->getMessage() . "\nThe SQL being executed was: $rawSql";
         $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
-        return new $exceptionClass($message, $errorInfo, (int) $e->getCode(), $e);
+        return new $exceptionClass($message, $errorInfo, $e->getCode(), $e);
     }
 
     /**
@@ -604,6 +685,19 @@ abstract class Schema extends BaseObject
     {
         $pattern = '/^\s*(SELECT|SHOW|DESCRIBE)\b/i';
         return preg_match($pattern, $sql) > 0;
+    }
+
+    /**
+     * Returns a server version as a string comparable by [[\version_compare()]].
+     * @return string server version as a string.
+     * @since 2.0.14
+     */
+    public function getServerVersion()
+    {
+        if ($this->_serverVersion === null) {
+            $this->_serverVersion = $this->db->getSlavePdo(true)->getAttribute(\PDO::ATTR_SERVER_VERSION);
+        }
+        return $this->_serverVersion;
     }
 
     /**
@@ -650,15 +744,15 @@ abstract class Schema extends BaseObject
         $cache = null;
         if ($this->db->enableSchemaCache && !in_array($name, $this->db->schemaCacheExclude, true)) {
             $schemaCache = is_string($this->db->schemaCache) ? Yii::$app->get($this->db->schemaCache, false) : $this->db->schemaCache;
-            if ($schemaCache instanceof Cache) {
+            if ($schemaCache instanceof CacheInterface) {
                 $cache = $schemaCache;
             }
         }
         $rawName = $this->getRawTableName($name);
-        if ($refresh || !isset($this->_tableMetadata[$rawName])) {
+        if (!isset($this->_tableMetadata[$rawName])) {
             $this->loadTableMetadataFromCache($cache, $rawName);
         }
-        if (!array_key_exists($type, $this->_tableMetadata[$rawName])) {
+        if ($refresh || !array_key_exists($type, $this->_tableMetadata[$rawName])) {
             $this->_tableMetadata[$rawName][$type] = $this->{'loadTable' . ucfirst($type)}($rawName);
             $this->saveTableMetadataToCache($cache, $rawName);
         }
@@ -715,7 +809,7 @@ abstract class Schema extends BaseObject
      */
     protected function normalizePdoRowKeyCase(array $row, $multiple)
     {
-        if ($this->db->getSlavePdo()->getAttribute(\PDO::ATTR_CASE) !== \PDO::CASE_UPPER) {
+        if ($this->db->getSlavePdo(true)->getAttribute(\PDO::ATTR_CASE) !== \PDO::CASE_UPPER) {
             return $row;
         }
 

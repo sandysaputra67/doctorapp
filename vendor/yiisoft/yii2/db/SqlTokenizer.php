@@ -1,14 +1,14 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db;
 
 use yii\base\Component;
-use yii\base\InvalidParamException;
+use yii\base\InvalidArgumentException;
 
 /**
  * SqlTokenizer splits an SQL query into individual SQL tokens.
@@ -371,12 +371,12 @@ abstract class SqlTokenizer extends Component
     /**
      * Adds the specified length to the current offset.
      * @param int $length
-     * @throws InvalidParamException
+     * @throws InvalidArgumentException
      */
     private function advance($length)
     {
         if ($length <= 0) {
-            throw new InvalidParamException('Length must be greater than 0.');
+            throw new InvalidArgumentException('Length must be greater than 0.');
         }
 
         $this->offset += $length;

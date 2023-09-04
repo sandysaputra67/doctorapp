@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\web;
@@ -60,7 +60,7 @@ class GroupUrlRule extends CompositeUrlRule
      */
     public $prefix;
     /**
-     * @var string the prefix for the route part of every rule declared in [[rules]].
+     * @var string|null the prefix for the route part of every rule declared in [[rules]].
      * The prefix and the route will be separated with a slash.
      * If this property is not set, it will take the value of [[prefix]].
      */
@@ -73,26 +73,33 @@ class GroupUrlRule extends CompositeUrlRule
 
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function init()
     {
-        $this->prefix = trim($this->prefix, '/');
+        $this->prefix = trim((string)$this->prefix, '/');
         $this->routePrefix = $this->routePrefix === null ? $this->prefix : trim($this->routePrefix, '/');
         parent::init();
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function createRules()
     {
         $rules = [];
         foreach ($this->rules as $key => $rule) {
             if (!is_array($rule)) {
+                $verbs = 'GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS';
+                $verb = null;
+                if (preg_match("/^((?:(?:$verbs),)*(?:$verbs))\\s+(.*)$/", $key, $matches)) {
+                    $verb = explode(',', $matches[1]);
+                    $key = $matches[2];
+                }
                 $rule = [
                     'pattern' => ltrim($this->prefix . '/' . $key, '/'),
                     'route' => ltrim($this->routePrefix . '/' . $rule, '/'),
+                    'verb' => $verb
                 ];
             } elseif (isset($rule['pattern'], $rule['route'])) {
                 $rule['pattern'] = ltrim($this->prefix . '/' . $rule['pattern'], '/');
@@ -110,7 +117,7 @@ class GroupUrlRule extends CompositeUrlRule
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function parseRequest($manager, $request)
     {
@@ -123,7 +130,7 @@ class GroupUrlRule extends CompositeUrlRule
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function createUrl($manager, $route, $params)
     {

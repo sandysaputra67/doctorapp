@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\widgets;
@@ -26,6 +26,17 @@ use yii\helpers\Url;
  */
 class ActiveForm extends Widget
 {
+    /**
+     * Add validation state class to container tag
+     * @since 2.0.14
+     */
+    const VALIDATION_STATE_ON_CONTAINER = 'container';
+    /**
+     * Add validation state class to input tag
+     * @since 2.0.14
+     */
+    const VALIDATION_STATE_ON_INPUT = 'input';
+
     /**
      * @var array|string the form action URL. This parameter will be processed by [[\yii\helpers\Url::to()]].
      * @see method for specifying the HTTP method for this form.
@@ -97,6 +108,13 @@ class ActiveForm extends Widget
      */
     public $validatingCssClass = 'validating';
     /**
+     * @var string where to render validation state class
+     * Could be either "container" or "input".
+     * Default is "container".
+     * @since 2.0.14
+     */
+    public $validationStateOn = self::VALIDATION_STATE_ON_CONTAINER;
+    /**
      * @var bool whether to enable client-side data validation.
      * If [[ActiveField::enableClientValidation]] is set, its value will take precedence for that input field.
      */
@@ -115,7 +133,7 @@ class ActiveForm extends Widget
      */
     public $enableClientScript = true;
     /**
-     * @var array|string the URL for performing AJAX-based validation. This property will be processed by
+     * @var array|string|null the URL for performing AJAX-based validation. This property will be processed by
      * [[Url::to()]]. Please refer to [[Url::to()]] for more details on how to configure this property.
      * If this property is not set, it will take the value of the form's action attribute.
      */
@@ -183,6 +201,7 @@ class ActiveForm extends Widget
      */
     public function init()
     {
+        parent::init();
         if (!isset($this->options['id'])) {
             $this->options['id'] = $this->getId();
         }
@@ -202,14 +221,15 @@ class ActiveForm extends Widget
         }
 
         $content = ob_get_clean();
-        echo Html::beginForm($this->action, $this->method, $this->options);
-        echo $content;
+        $html = Html::beginForm($this->action, $this->method, $this->options);
+        $html .= $content;
 
         if ($this->enableClientScript) {
             $this->registerClientScript();
         }
 
-        echo Html::endForm();
+        $html .= Html::endForm();
+        return $html;
     }
 
     /**
@@ -243,6 +263,7 @@ class ActiveForm extends Widget
             'ajaxDataType' => $this->ajaxDataType,
             'scrollToError' => $this->scrollToError,
             'scrollToErrorOffset' => $this->scrollToErrorOffset,
+            'validationStateOn' => $this->validationStateOn,
         ];
         if ($this->validationUrl !== null) {
             $options['validationUrl'] = Url::to($this->validationUrl);
@@ -260,6 +281,7 @@ class ActiveForm extends Widget
             'ajaxDataType' => 'json',
             'scrollToError' => true,
             'scrollToErrorOffset' => 0,
+            'validationStateOn' => self::VALIDATION_STATE_ON_CONTAINER,
         ]);
     }
 

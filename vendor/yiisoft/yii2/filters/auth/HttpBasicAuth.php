@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\filters\auth;
@@ -17,7 +17,7 @@ namespace yii\filters\auth;
  * {
  *     return [
  *         'basicAuth' => [
- *             'class' => \yii\filters\auth\HttpBasicAuth::className(),
+ *             'class' => \yii\filters\auth\HttpBasicAuth::class,
  *         ],
  *     ];
  * }
@@ -34,10 +34,10 @@ namespace yii\filters\auth;
  * {
  *     return [
  *         'basicAuth' => [
- *             'class' => \yii\filters\auth\HttpBasicAuth::className(),
+ *             'class' => \yii\filters\auth\HttpBasicAuth::class,
  *             'auth' => function ($username, $password) {
  *                 $user = User::find()->where(['username' => $username])->one();
- *                 if ($user->verifyPassword($password)) {
+ *                 if ($user && $user->validatePassword($password)) {
  *                     return $user;
  *                 }
  *                 return null;
@@ -64,9 +64,10 @@ class HttpBasicAuth extends AuthMethod
      */
     public $realm = 'api';
     /**
-     * @var callable a PHP callable that will authenticate the user with the HTTP basic auth information.
+     * @var callable|null a PHP callable that will authenticate the user with the HTTP basic auth information.
      * The callable receives a username and a password as its parameters. It should return an identity object
      * that matches the username and password. Null should be returned if there is no such identity.
+     * The callable will be called only if current user is not authenticated.
      *
      * The following code is a typical implementation of this callable:
      *
@@ -87,7 +88,7 @@ class HttpBasicAuth extends AuthMethod
 
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function authenticate($user, $request, $response)
     {
@@ -95,11 +96,12 @@ class HttpBasicAuth extends AuthMethod
 
         if ($this->auth) {
             if ($username !== null || $password !== null) {
-                $identity = call_user_func($this->auth, $username, $password);
-                if ($identity !== null) {
-                    $user->switchIdentity($identity);
-                } else {
+                $identity = $user->getIdentity() ?: call_user_func($this->auth, $username, $password);
+
+                if ($identity === null) {
                     $this->handleFailure($response);
+                } elseif ($user->getIdentity(false) !== $identity) {
+                    $user->login($identity);
                 }
 
                 return $identity;
@@ -117,7 +119,7 @@ class HttpBasicAuth extends AuthMethod
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function challenge($response)
     {

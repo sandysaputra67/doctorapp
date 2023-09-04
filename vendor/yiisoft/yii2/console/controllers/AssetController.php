@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\console\controllers;
@@ -484,7 +484,7 @@ class AssetController extends Controller
             }
         }
         $array = VarDumper::export($array);
-        $version = date('Y-m-d H:i:s', time());
+        $version = date('Y-m-d H:i:s');
         $bundleFileContent = <<<EOD
 <?php
 /**
@@ -494,7 +494,7 @@ class AssetController extends Controller
  */
 return {$array};
 EOD;
-        if (!file_put_contents($bundleFile, $bundleFileContent)) {
+        if (!file_put_contents($bundleFile, $bundleFileContent, LOCK_EX)) {
             throw new Exception("Unable to write output bundle configuration at '{$bundleFile}'.");
         }
         $this->stdout("Output bundle configuration created at '{$bundleFile}'.\n", Console::FG_GREEN);
@@ -515,7 +515,7 @@ EOD;
         if (is_string($this->jsCompressor)) {
             $tmpFile = $outputFile . '.tmp';
             $this->combineJsFiles($inputFiles, $tmpFile);
-            $this->stdout(shell_exec(strtr($this->jsCompressor, [
+            $this->stdout((string)shell_exec(strtr($this->jsCompressor, [
                 '{from}' => escapeshellarg($tmpFile),
                 '{to}' => escapeshellarg($outputFile),
             ])));
@@ -544,7 +544,7 @@ EOD;
         if (is_string($this->cssCompressor)) {
             $tmpFile = $outputFile . '.tmp';
             $this->combineCssFiles($inputFiles, $tmpFile);
-            $this->stdout(shell_exec(strtr($this->cssCompressor, [
+            $this->stdout((string)shell_exec(strtr($this->cssCompressor, [
                 '{from}' => escapeshellarg($tmpFile),
                 '{to}' => escapeshellarg($outputFile),
             ])));
@@ -646,7 +646,7 @@ EOD;
             $fullMatch = $matches[0];
             $inputUrl = $matches[1];
 
-            if (strpos($inputUrl, '/') === 0 || strpos($inputUrl, '#') === 0 || preg_match('/^https?:\/\//i', $inputUrl) || preg_match('/^data:/i', $inputUrl)) {
+            if (strncmp($inputUrl, '/', 1) === 0 || strncmp($inputUrl, '#', 1) === 0 || preg_match('/^https?:\/\//i', $inputUrl) || preg_match('/^data:/i', $inputUrl)) {
                 return $fullMatch;
             }
             if ($inputFileRelativePathParts === $outputFileRelativePathParts) {
@@ -677,7 +677,7 @@ EOD;
             return str_replace($inputUrl, $outputUrl, $fullMatch);
         };
 
-        $cssContent = preg_replace_callback('/url\(["\']?([^)^"^\']*)["\']?\)/i', $callback, $cssContent);
+        $cssContent = preg_replace_callback('/url\(["\']?([^)^"\']*)["\']?\)/i', $callback, $cssContent);
 
         return $cssContent;
     }
@@ -738,7 +738,7 @@ EOD;
                 return ExitCode::OK;
             }
         }
-        if (!file_put_contents($configFile, $template)) {
+        if (!file_put_contents($configFile, $template, LOCK_EX)) {
             throw new Exception("Unable to write template file '{$configFile}'.");
         }
 

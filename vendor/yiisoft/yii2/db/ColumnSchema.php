@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 namespace yii\db;
@@ -34,7 +34,7 @@ class ColumnSchema extends BaseObject
     public $type;
     /**
      * @var string the PHP type of this column. Possible PHP types include:
-     * `string`, `boolean`, `integer`, `double`.
+     * `string`, `boolean`, `integer`, `double`, `array`.
      */
     public $phpType;
     /**
@@ -114,12 +114,36 @@ class ColumnSchema extends BaseObject
      */
     protected function typecast($value)
     {
-        if ($value === '' && $this->type !== Schema::TYPE_TEXT && $this->type !== Schema::TYPE_STRING && $this->type !== Schema::TYPE_BINARY && $this->type !== Schema::TYPE_CHAR) {
+        if ($value === ''
+            && !in_array(
+                $this->type,
+                [
+                    Schema::TYPE_TEXT,
+                    Schema::TYPE_STRING,
+                    Schema::TYPE_BINARY,
+                    Schema::TYPE_CHAR
+                ],
+                true)
+        ) {
             return null;
         }
-        if ($value === null || gettype($value) === $this->phpType || $value instanceof Expression || $value instanceof Query) {
+
+        if ($value === null
+            || gettype($value) === $this->phpType
+            || $value instanceof ExpressionInterface
+            || $value instanceof Query
+        ) {
             return $value;
         }
+
+        if (is_array($value)
+            && count($value) === 2
+            && isset($value[1])
+            && in_array($value[1], $this->getPdoParamTypes(), true)
+        ) {
+            return new PdoValue($value[0], $value[1]);
+        }
+
         switch ($this->phpType) {
             case 'resource':
             case 'string':
@@ -130,8 +154,22 @@ class ColumnSchema extends BaseObject
                     // ensure type cast always has . as decimal separator in all locales
                     return StringHelper::floatToString($value);
                 }
+                if (is_numeric($value)
+                    && ColumnSchemaBuilder::CATEGORY_NUMERIC === ColumnSchemaBuilder::$typeCategoryMap[$this->type]
+                ) {
+                    // https://github.com/yiisoft/yii2/issues/14663
+                    return $value;
+                }
+
+                if (PHP_VERSION_ID >= 80100 && is_object($value) && $value instanceof \BackedEnum) {
+                    return (string) $value->value;
+                }
+
                 return (string) $value;
             case 'integer':
+                if (PHP_VERSION_ID >= 80100 && is_object($value) && $value instanceof \BackedEnum) {
+                    return (int) $value->value;
+                }
                 return (int) $value;
             case 'boolean':
                 // treating a 0 bit value as false too
@@ -142,5 +180,13 @@ class ColumnSchema extends BaseObject
         }
 
         return $value;
+    }
+
+    /**
+     * @return int[] array of numbers that represent possible PDO parameter types
+     */
+    private function getPdoParamTypes()
+    {
+        return [\PDO::PARAM_BOOL, \PDO::PARAM_INT, \PDO::PARAM_STR, \PDO::PARAM_LOB, \PDO::PARAM_NULL, \PDO::PARAM_STMT];
     }
 }

@@ -1,6 +1,5 @@
 <?php
 return [
-    'name' => 'e-Dokter Web',
     'components' => [
         'db' => [
             'class' => 'yii\db\Connection',

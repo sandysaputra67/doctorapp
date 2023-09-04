@@ -1,8 +1,8 @@
 <?php
 /**
- * @link http://www.yiiframework.com/
+ * @link https://www.yiiframework.com/
  * @copyright Copyright (c) 2008 Yii Software LLC
- * @license http://www.yiiframework.com/license/
+ * @license https://www.yiiframework.com/license/
  */
 
 use yii\base\InvalidConfigException;
@@ -37,20 +37,24 @@ class m170907_052038_rbac_add_index_on_auth_assignment_user_id extends Migration
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function up()
     {
         $authManager = $this->getAuthManager();
+        $this->db = $authManager->db;
+
         $this->createIndex($this->index, $authManager->assignmentTable, $this->column);
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function down()
     {
         $authManager = $this->getAuthManager();
+        $this->db = $authManager->db;
+
         $this->dropIndex($this->index, $authManager->assignmentTable);
     }
 }
